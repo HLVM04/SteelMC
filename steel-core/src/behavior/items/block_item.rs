@@ -3,6 +3,7 @@
 use steel_macros::item_behavior;
 use steel_registry::{
     blocks::{BlockRef, block_state_ext::BlockStateExt},
+    sound_event::SoundEventRef,
     vanilla_blocks, vanilla_game_events,
 };
 use steel_utils::{BlockStateId, types::UpdateFlags};
@@ -32,8 +33,41 @@ impl BlockItem {
 
     pub(super) fn place_with(
         &self,
+        context: BlockPlaceContext<'_>,
+        place_block: impl FnOnce(&BlockPlaceContext<'_>, BlockStateId) -> bool,
+    ) -> InteractionResult {
+        let sound_type = self.block.config.sound_type;
+        self.place_with_sound_and_block(
+            context,
+            place_block,
+            sound_type.place_sound,
+            sound_type.volume,
+            sound_type.pitch,
+        )
+    }
+
+    pub(super) fn place_with_sound(
+        &self,
+        context: BlockPlaceContext<'_>,
+        place_sound: SoundEventRef,
+    ) -> InteractionResult {
+        let sound_type = self.block.config.sound_type;
+        self.place_with_sound_and_block(
+            context,
+            Self::place_block,
+            place_sound,
+            sound_type.volume,
+            sound_type.pitch,
+        )
+    }
+
+    fn place_with_sound_and_block(
+        &self,
         mut context: BlockPlaceContext<'_>,
         place_block: impl FnOnce(&BlockPlaceContext<'_>, BlockStateId) -> bool,
+        place_sound: SoundEventRef,
+        sound_volume: f32,
+        sound_pitch: f32,
     ) -> InteractionResult {
         if !context.can_place() {
             return InteractionResult::Fail;
@@ -65,12 +99,11 @@ impl BlockItem {
         }
 
         // Play place sound (exclude the placing player, they hear it client-side)
-        let sound_type = &self.block.config.sound_type;
         context.world.play_block_sound(
-            sound_type.place_sound,
+            place_sound,
             place_pos,
-            sound_type.volume,
-            sound_type.pitch,
+            sound_volume,
+            sound_pitch,
             context.player().map(Entity::id),
         );
         context.world.game_event(
