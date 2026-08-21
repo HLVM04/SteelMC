@@ -16,11 +16,19 @@ const USE_DURATION: i32 = 1200;
 #[item_behavior]
 pub struct SpyglassItem;
 
+impl SpyglassItem {
+    fn stop_using(user: &dyn LivingEntity) {
+        user.play_sound(&sound_events::ITEM_SPYGLASS_STOP_USING, 1.0, 1.0);
+    }
+}
+
 impl ItemBehavior for SpyglassItem {
     fn use_item(&self, context: &mut UseItemContext) -> InteractionResult {
         context
             .player
             .play_sound(&sound_events::ITEM_SPYGLASS_USE, 1.0, 1.0);
+        // TODO: Award `Stats.ITEM_USED` once Steel has a statistics foundation.
+        // player.awardStat(Stats.ITEM_USED.get(this));
         context.player.start_using_item(context.hand);
         InteractionResult::Consume
     }
@@ -39,7 +47,7 @@ impl ItemBehavior for SpyglassItem {
         _world: &Arc<World>,
         user: &dyn LivingEntity,
     ) -> ItemStack {
-        stop_using(user);
+        Self::stop_using(user);
         stack.copy_with_count(stack.count())
     }
 
@@ -50,11 +58,7 @@ impl ItemBehavior for SpyglassItem {
         user: &dyn LivingEntity,
         _time_left: i32,
     ) -> bool {
-        stop_using(user);
+        Self::stop_using(user);
         true
     }
-}
-
-fn stop_using(user: &dyn LivingEntity) {
-    user.play_sound(&sound_events::ITEM_SPYGLASS_STOP_USING, 1.0, 1.0);
 }
