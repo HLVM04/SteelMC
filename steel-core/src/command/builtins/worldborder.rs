@@ -14,6 +14,7 @@ use super::super::{
 use crate::world::WorldBorderError;
 
 const MAX_SIZE: f64 = 5.999_997E7_f32 as f64;
+const MIN_SIZE: f64 = 1.0;
 const MAX_CENTER_COORDINATE: f64 = 2.999_998_4E7;
 
 pub(super) fn registration() -> CommandRegistration<CommandSource> {
@@ -119,14 +120,14 @@ fn set_size(
             &translations::COMMANDS_WORLDBORDER_SET_FAILED_NOCHANGE,
         ));
     }
-    if distance < 1.0 {
+    if distance < MIN_SIZE {
         return Err(translated_error(
             &translations::COMMANDS_WORLDBORDER_SET_FAILED_SMALL,
         ));
     }
     if distance > MAX_SIZE {
         let message = translations::COMMANDS_WORLDBORDER_SET_FAILED_BIG
-            .message(["5.999997E7"])
+            .message([format!("{MAX_SIZE:.6E}")])
             .component();
         return Err(CommandSyntaxError::dynamic(message));
     }
@@ -176,7 +177,7 @@ fn set_center(context: &SteelCommandContext<CommandSource>) -> Result<i32, Comma
     }
     if center_x.abs() > MAX_CENTER_COORDINATE || center_z.abs() > MAX_CENTER_COORDINATE {
         let message = translations::COMMANDS_WORLDBORDER_SET_FAILED_FAR
-            .message(["2.9999984E7"])
+            .message([format!("{MAX_CENTER_COORDINATE:.7E}")])
             .component();
         return Err(CommandSyntaxError::dynamic(message));
     }
@@ -303,7 +304,9 @@ fn internal_border_error(error: WorldBorderError) -> CommandSyntaxError {
 
 #[cfg(test)]
 mod tests {
-    use super::{added_lerp_time, format_ticks_to_seconds, size_command};
+    use super::{
+        MAX_CENTER_COORDINATE, MAX_SIZE, added_lerp_time, format_ticks_to_seconds, size_command,
+    };
     use crate::command::{
         brigadier::{ArgumentType, CommandDispatcher},
         execution::{CommandSource, SteelArgumentType, SteelCommandRuntime},
@@ -313,6 +316,12 @@ mod tests {
     fn formats_ticks_as_vanilla_seconds() {
         assert_eq!(format_ticks_to_seconds(0), "0.00");
         assert_eq!(format_ticks_to_seconds(31), "1.55");
+    }
+
+    #[test]
+    fn formats_limits_like_vanilla_numeric_components() {
+        assert_eq!(format!("{MAX_SIZE:.6E}"), "5.999997E7");
+        assert_eq!(format!("{MAX_CENTER_COORDINATE:.7E}"), "2.9999984E7");
     }
 
     #[test]
