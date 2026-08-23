@@ -1,7 +1,7 @@
 //! Default world spawn command.
 
 use steel_utils::{BlockPos, Identifier, translations};
-use text_components::{TextComponent, translation::Translation};
+use text_components::TextComponent;
 
 use super::super::{
     brigadier::{CommandNodeBuilder, CommandSyntaxError},
@@ -12,9 +12,6 @@ use super::super::{
     registration::CommandRegistration,
 };
 use crate::{level_data::RespawnData, world::World};
-
-// Vanilla keeps the legacy key while sending the newer yaw/pitch argument shape.
-const SUCCESS: Translation<6> = Translation("commands.setworldspawn.success");
 
 pub(super) fn registration() -> CommandRegistration<CommandSource> {
     CommandRegistration::new(Identifier::vanilla_static("setworldspawn"), |_| command())
@@ -72,7 +69,7 @@ fn set_spawn(
         .set_respawn_data(respawn_data)
         .map_err(CommandSyntaxError::dynamic)?;
 
-    let message = SUCCESS
+    let message = translations::COMMANDS_SETWORLDSPAWN_SUCCESS
         .message([
             position.x().to_string(),
             position.y().to_string(),
