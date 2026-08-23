@@ -32,9 +32,11 @@ impl SolidBucketItem {
 
 impl ItemBehavior for SolidBucketItem {
     fn use_on(&self, context: &mut UseOnContext) -> InteractionResult {
-        let result = self
-            .base
-            .place_with_sound(context.build_place_context(), self.place_sound);
+        let result = self.base.place_with_sound_and_block(
+            context.build_place_context(),
+            BlockItem::place_block,
+            self.place_sound,
+        );
 
         if matches!(result, InteractionResult::Success) && !context.player.has_infinite_materials()
         {

@@ -36,38 +36,22 @@ impl BlockItem {
         context: BlockPlaceContext<'_>,
         place_block: impl FnOnce(&BlockPlaceContext<'_>, BlockStateId) -> bool,
     ) -> InteractionResult {
-        let sound_type = self.block.config.sound_type;
         self.place_with_sound_and_block(
             context,
             place_block,
-            sound_type.place_sound,
-            sound_type.volume,
-            sound_type.pitch,
+            self.block.config.sound_type.place_sound,
         )
     }
 
-    pub(super) fn place_with_sound(
-        &self,
-        context: BlockPlaceContext<'_>,
-        place_sound: SoundEventRef,
-    ) -> InteractionResult {
-        let sound_type = self.block.config.sound_type;
-        self.place_with_sound_and_block(
-            context,
-            Self::place_block,
-            place_sound,
-            sound_type.volume,
-            sound_type.pitch,
-        )
-    }
-
-    fn place_with_sound_and_block(
+    #[expect(
+        clippy::manual_midpoint,
+        reason = "Matches vanilla BlockItem::place's sound volume formula"
+    )]
+    pub(super) fn place_with_sound_and_block(
         &self,
         mut context: BlockPlaceContext<'_>,
         place_block: impl FnOnce(&BlockPlaceContext<'_>, BlockStateId) -> bool,
         place_sound: SoundEventRef,
-        sound_volume: f32,
-        sound_pitch: f32,
     ) -> InteractionResult {
         if !context.can_place() {
             return InteractionResult::Fail;
@@ -102,8 +86,8 @@ impl BlockItem {
         context.world.play_block_sound(
             place_sound,
             place_pos,
-            sound_volume,
-            sound_pitch,
+            (self.block.config.sound_type.volume + 1.0) / 2.0,
+            self.block.config.sound_type.pitch * 0.8,
             context.player().map(Entity::id),
         );
         context.world.game_event(
@@ -125,7 +109,7 @@ impl BlockItem {
         self.place_with(context, Self::place_block)
     }
 
-    fn place_block(context: &BlockPlaceContext<'_>, state: BlockStateId) -> bool {
+    pub(super) fn place_block(context: &BlockPlaceContext<'_>, state: BlockStateId) -> bool {
         context
             .world
             .set_block(context.place_pos(), state, Self::PLACE_BLOCK_FLAGS)
