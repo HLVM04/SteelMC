@@ -3,7 +3,7 @@
 use std::{slice, sync::Arc};
 
 use steel_utils::{BlockPos, Identifier, translations};
-use text_components::{TextComponent, translation::Translation};
+use text_components::TextComponent;
 
 use super::super::{
     brigadier::{CommandNodeBuilder, CommandSyntaxError},
@@ -18,10 +18,6 @@ use crate::{
     level_data::RespawnData,
     player::{Player, PlayerRespawnConfig},
 };
-
-// Vanilla keeps the legacy keys while sending the newer yaw/pitch argument shape.
-const SUCCESS_SINGLE: Translation<7> = Translation("commands.spawnpoint.success.single");
-const SUCCESS_MULTIPLE: Translation<7> = Translation("commands.spawnpoint.success.multiple");
 
 pub(super) fn registration() -> CommandRegistration<CommandSource> {
     CommandRegistration::new(Identifier::vanilla_static("spawnpoint"), |_| command())
@@ -102,7 +98,7 @@ fn set_spawn(
     }
 
     let message = if let [target] = targets {
-        SUCCESS_SINGLE
+        translations::COMMANDS_SPAWNPOINT_SUCCESS_SINGLE
             .message([
                 TextComponent::from(position.x().to_string()),
                 TextComponent::from(position.y().to_string()),
@@ -114,7 +110,7 @@ fn set_spawn(
             ])
             .component()
     } else {
-        SUCCESS_MULTIPLE
+        translations::COMMANDS_SPAWNPOINT_SUCCESS_MULTIPLE
             .message([
                 TextComponent::from(position.x().to_string()),
                 TextComponent::from(position.y().to_string()),
