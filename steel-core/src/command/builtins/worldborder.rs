@@ -11,11 +11,9 @@ use super::super::{
     },
     registration::CommandRegistration,
 };
-use crate::world::WorldBorderError;
+use crate::world::{MAX_CENTER_COORDINATE, MAX_SIZE, WorldBorderError};
 
-const MAX_SIZE: f64 = 5.999_997E7_f32 as f64;
 const MIN_SIZE: f64 = 1.0;
-const MAX_CENTER_COORDINATE: f64 = 2.999_998_4E7;
 
 pub(super) fn registration() -> CommandRegistration<CommandSource> {
     CommandRegistration::new(Identifier::vanilla_static("worldborder"), |_| command())
