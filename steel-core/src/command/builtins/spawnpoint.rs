@@ -2,7 +2,7 @@
 
 use std::{slice, sync::Arc};
 
-use steel_utils::{BlockPos, Identifier, translations};
+use steel_utils::{BlockPos, Identifier, java::float_to_string, translations};
 use text_components::TextComponent;
 
 use super::super::{
@@ -103,8 +103,8 @@ fn set_spawn(
                 TextComponent::from(position.x().to_string()),
                 TextComponent::from(position.y().to_string()),
                 TextComponent::from(position.z().to_string()),
-                TextComponent::from(respawn_data.yaw.to_string()),
-                TextComponent::from(respawn_data.pitch.to_string()),
+                TextComponent::from(float_to_string(respawn_data.yaw)),
+                TextComponent::from(float_to_string(respawn_data.pitch)),
                 TextComponent::from(source.world().key.to_string()),
                 target.display_name(),
             ])
@@ -115,8 +115,8 @@ fn set_spawn(
                 TextComponent::from(position.x().to_string()),
                 TextComponent::from(position.y().to_string()),
                 TextComponent::from(position.z().to_string()),
-                TextComponent::from(respawn_data.yaw.to_string()),
-                TextComponent::from(respawn_data.pitch.to_string()),
+                TextComponent::from(float_to_string(respawn_data.yaw)),
+                TextComponent::from(float_to_string(respawn_data.pitch)),
                 TextComponent::from(source.world().key.to_string()),
                 TextComponent::from(targets.len().to_string()),
             ])
