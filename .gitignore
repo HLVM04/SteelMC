@@ -41,3 +41,5 @@ rustc-ice-*
 .idea
 
 .DS_STORE
+.gitcraft-tmp/
+/.vs
