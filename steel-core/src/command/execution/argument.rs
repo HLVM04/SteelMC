@@ -1,10 +1,10 @@
 use std::{fmt, sync::Arc};
 
 use super::{
-    BiomeOrTag, BlockPredicate, CommandArgumentSource, Coordinates, IntRange, ItemPredicate,
-    ScoreHolderArgument, StructureOrTagKey, WorldArgument,
+    BiomeOrTag, BlockInput, BlockPredicate, CommandArgumentSource, Coordinates, IntRange,
+    ItemPredicate, ScoreHolderArgument, StructureOrTagKey, WorldArgument,
     biome::{parse_biome_or_tag, suggest_biomes},
-    block::{parse_block_predicate, suggest_blocks},
+    block::{parse_block_input, parse_block_predicate, suggest_block_inputs, suggest_blocks},
     coordinates::{
         parse_block_pos, parse_rotation, parse_vec2, parse_vec3, suggest_coordinates, suggest_vec2,
     },
@@ -294,6 +294,7 @@ impl SteelArgumentType {
     pub(crate) fn block_predicate() -> Self {
         Self::new(BlockPredicateParser)
     }
+
     pub(crate) fn block_state() -> Self {
         Self::new(BlockStateParser)
     }
@@ -494,6 +495,7 @@ impl_downcast_type!(
     "steel:command/value/structure_or_tag_key"
 );
 impl_downcast_type!(BlockPredicate, "steel:command/value/block_predicate");
+impl_downcast_type!(BlockInput, "steel:command/value/block_input");
 impl_downcast_type!(WorldArgument, "steel:command/value/world");
 impl_downcast_type!(ItemPredicate, "steel:command/value/item_predicate");
 
@@ -897,6 +899,18 @@ unit_argument_parser!(
     )
 );
 unit_argument_parser!(
+    BlockStateParser,
+    "steel:command/parser/block_state",
+    BlockInput,
+    parse | reader,
+    _source | { parse_block_input(reader) },
+    suggest | _context,
+    builder | {
+        suggest_block_inputs(builder);
+    },
+    protocol(ProtocolArgumentType::BlockState, None)
+);
+unit_argument_parser!(
     BlockPredicateParser,
     "steel:command/parser/block_predicate",
     BlockPredicate,
@@ -907,16 +921,6 @@ unit_argument_parser!(
         suggest_blocks(builder);
     },
     protocol(ProtocolArgumentType::BlockPredicate, None)
-);
-unit_argument_parser!(
-    BlockStateParser,
-    "steel:command/parser/block_state",
-    BlockPredicate,
-    parse | reader,
-    _source | { parse_block_predicate(reader) },
-    suggest | _context,
-    _builder | {},
-    protocol(ProtocolArgumentType::BlockState, None)
 );
 unit_argument_parser!(
     GameModeParser,
