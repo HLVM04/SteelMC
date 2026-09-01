@@ -53,7 +53,7 @@ fn source_command(source: SoundSource) -> CommandNodeBuilder<CommandSource, Stee
     let volume = argument("volume", ArgumentType::float(0.0, f32::MAX))
         .executes(move |context| execute_for_targets(context, source))
         .then(pitch);
-    let pos = argument("pos", SteelArgumentType::vec3(false))
+    let pos = argument("pos", SteelArgumentType::vec3(true))
         .executes(move |context| execute_for_targets(context, source))
         .then(volume);
     let targets = argument("targets", SteelArgumentType::players())
@@ -220,7 +220,7 @@ mod tests {
             let pos = child(&dispatcher, targets, "pos");
             assert_eq!(
                 dispatcher.node(pos).and_then(|node| node.argument_type()),
-                Some(&SteelArgumentType::vec3(false))
+                Some(&SteelArgumentType::vec3(true))
             );
             assert!(
                 dispatcher
