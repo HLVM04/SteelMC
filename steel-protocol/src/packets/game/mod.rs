@@ -8,6 +8,7 @@ mod c_block_event;
 mod c_block_update;
 mod c_bundle_delimiter;
 mod c_change_difficulty;
+mod c_clear_titles;
 mod c_command_suggestions;
 mod c_commands;
 mod c_container_close;
@@ -38,6 +39,7 @@ mod c_remove_player_info;
 mod c_respawn;
 mod c_rotate_head;
 mod c_section_blocks_update;
+mod c_set_action_bar_text;
 mod c_set_camera;
 mod c_set_cursor_item;
 mod c_set_default_spawn_position;
@@ -50,7 +52,10 @@ mod c_set_health;
 mod c_set_held_slot;
 mod c_set_passengers;
 mod c_set_player_inventory;
+mod c_set_subtitle_text;
 mod c_set_time;
+mod c_set_title_text;
+mod c_set_titles_animation;
 mod c_sound;
 mod c_tab_list;
 mod c_take_item_entity;
@@ -102,6 +107,7 @@ pub use c_block_event::CBlockEvent;
 pub use c_block_update::CBlockUpdate;
 pub use c_bundle_delimiter::CBundleDelimiter;
 pub use c_change_difficulty::CChangeDifficulty;
+pub use c_clear_titles::CClearTitles;
 pub use c_command_suggestions::{CCommandSuggestions, SuggestionEntry};
 pub use c_commands::{
     ArgumentStringTypeBehavior, ArgumentType, CCommands, CommandNode, CommandNodeInfo,
@@ -141,6 +147,7 @@ pub use c_remove_player_info::CRemovePlayerInfo;
 pub use c_respawn::CRespawn;
 pub use c_rotate_head::CRotateHead;
 pub use c_section_blocks_update::{BlockChange, CSectionBlocksUpdate};
+pub use c_set_action_bar_text::CSetActionBarText;
 pub use c_set_camera::CSetCamera;
 pub use c_set_cursor_item::CSetCursorItem;
 pub use c_set_default_spawn_position::CSetDefaultSpawnPosition;
@@ -153,7 +160,10 @@ pub use c_set_health::CSetHealth;
 pub use c_set_held_slot::CSetHeldSlot;
 pub use c_set_passengers::CSetPassengers;
 pub use c_set_player_inventory::CSetPlayerInventory;
+pub use c_set_subtitle_text::CSetSubtitleText;
 pub use c_set_time::CSetTime;
+pub use c_set_title_text::CSetTitleText;
+pub use c_set_titles_animation::CSetTitlesAnimation;
 pub use c_sound::{CSound, SoundSource};
 pub use c_tab_list::CTabList;
 pub use c_take_item_entity::CTakeItemEntity;
@@ -209,3 +219,63 @@ pub use world_border::{
     CInitializeBorder, CSetBorderCenter, CSetBorderLerpSize, CSetBorderSize,
     CSetBorderWarningDelay, CSetBorderWarningDistance,
 };
+
+#[cfg(test)]
+mod tests {
+    use super::{
+        CClearTitles, CSetActionBarText, CSetSubtitleText, CSetTitleText, CSetTitlesAnimation,
+    };
+    use crate::{
+        packet_traits::{ClientPacket, EncodedPacket},
+        utils::ConnectionProtocol,
+    };
+    use text_components::TextComponent;
+
+    fn encode<P: ClientPacket>(packet: P) -> Vec<u8> {
+        let Ok(packet) = EncodedPacket::from_bare(packet, None, ConnectionProtocol::Play) else {
+            panic!("title packet should encode");
+        };
+        packet.encoded_data.as_slice().to_vec()
+    }
+
+    #[test]
+    fn title_packets_use_vanilla_ids_and_wire_formats() {
+        assert_eq!(encode(CClearTitles { reset_times: false }), [2, 14, 0]);
+        assert_eq!(encode(CClearTitles { reset_times: true }), [2, 14, 1]);
+
+        let text = [8, 0, 5, b'h', b'e', b'l', b'l', b'o'];
+        assert_eq!(
+            encode(CSetTitleText {
+                text: TextComponent::plain("hello"),
+            }),
+            [
+                9, 114, text[0], text[1], text[2], text[3], text[4], text[5], text[6], text[7]
+            ]
+        );
+        assert_eq!(
+            encode(CSetSubtitleText {
+                text: TextComponent::plain("hello"),
+            }),
+            [
+                9, 112, text[0], text[1], text[2], text[3], text[4], text[5], text[6], text[7]
+            ]
+        );
+        assert_eq!(
+            encode(CSetActionBarText {
+                text: TextComponent::plain("hello"),
+            }),
+            [
+                9, 87, text[0], text[1], text[2], text[3], text[4], text[5], text[6], text[7]
+            ]
+        );
+
+        assert_eq!(
+            encode(CSetTitlesAnimation {
+                fade_in: 0x0102_0304,
+                stay: -2,
+                fade_out: i32::MAX,
+            }),
+            [13, 115, 1, 2, 3, 4, 255, 255, 255, 254, 127, 255, 255, 255]
+        );
+    }
+}
