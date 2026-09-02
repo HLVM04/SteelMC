@@ -3153,6 +3153,10 @@ fn damage_command_records_by_entity_as_the_responsible_player() {
 }
 
 #[test]
+#[expect(
+    clippy::too_many_lines,
+    reason = "one integration test covers all title branches and issuer-scoped resolution"
+)]
 fn title_command_delivers_vanilla_packets_to_recorded_connections() {
     let world = fresh_test_world("title-command");
     let storage_root = test_storage_root("title-command");
@@ -3184,14 +3188,17 @@ fn title_command_delivers_vanilla_packets_to_recorded_connections() {
         alice.set_client_loaded(true);
         bob.set_client_loaded(true);
 
-        let execute = |command: &str| -> (bool, i32) {
+        let execute = |command: &str, source_entity: Option<SharedEntity>| -> (bool, i32) {
             let result = Arc::new(SyncMutex::new(None));
             let result_for_callback = Arc::clone(&result);
             let callback = CommandResultCallback::new(move |success, value| {
                 *result_for_callback.lock() = Some((success, value));
             });
-            let source = CommandSource::new(CommandSender::Console, Arc::clone(&server))
-                .with_callback(callback);
+            let mut source = CommandSource::new(CommandSender::Console, Arc::clone(&server));
+            if let Some(source_entity) = source_entity {
+                source = source.with_entity(source_entity);
+            }
+            let source = source.with_callback(callback);
             let chain = {
                 let dispatcher = server.command_dispatcher.read();
                 let parse = dispatcher.parse(command, source.clone());
@@ -3212,7 +3219,10 @@ fn title_command_delivers_vanilla_packets_to_recorded_connections() {
         };
 
         assert_eq!(
-            execute("title @a title {text:\"Hello \",extra:[{selector:\"@s\"}]}"),
+            execute(
+                "title @a title {text:\"Hello \",extra:[{selector:\"@s\"}]}",
+                Some(Arc::clone(&alice) as SharedEntity),
+            ),
             (true, 2)
         );
         let mut titles = packet_payloads(&alice_packets, C_SET_TITLE_TEXT)
@@ -3221,9 +3231,12 @@ fn title_command_delivers_vanilla_packets_to_recorded_connections() {
             .map(|payload| decode_text_component(&payload).to_plain(&DisplayResolutor))
             .collect::<Vec<_>>();
         titles.sort_unstable();
-        assert_eq!(titles, ["Hello ", "Hello "]);
+        assert_eq!(titles, ["Hello Alice", "Hello Alice"]);
 
-        assert_eq!(execute("title Alice subtitle {text:\"Sub\"}"), (true, 1));
+        assert_eq!(
+            execute("title Alice subtitle {text:\"Sub\"}", None),
+            (true, 1)
+        );
         let subtitle = packet_payloads(&alice_packets, C_SET_SUBTITLE_TEXT);
         assert_eq!(subtitle.len(), 1);
         assert_eq!(
@@ -3231,7 +3244,10 @@ fn title_command_delivers_vanilla_packets_to_recorded_connections() {
             "Sub"
         );
 
-        assert_eq!(execute("title Bob actionbar {text:\"Bar\"}"), (true, 1));
+        assert_eq!(
+            execute("title Bob actionbar {text:\"Bar\"}", None),
+            (true, 1)
+        );
         let actionbar = packet_payloads(&bob_packets, C_SET_ACTION_BAR_TEXT);
         assert_eq!(actionbar.len(), 1);
         assert_eq!(
@@ -3239,16 +3255,16 @@ fn title_command_delivers_vanilla_packets_to_recorded_connections() {
             "Bar"
         );
 
-        assert_eq!(execute("title @a times 1.5s 2t 3t"), (true, 2));
+        assert_eq!(execute("title @a times 1.5s 2t 3t", None), (true, 2));
         let expected_times = [0, 0, 0, 30, 0, 0, 0, 2, 0, 0, 0, 3];
         let alice_times = packet_payloads(&alice_packets, C_SET_TITLES_ANIMATION);
         let bob_times = packet_payloads(&bob_packets, C_SET_TITLES_ANIMATION);
         assert_eq!(alice_times, [expected_times]);
         assert_eq!(bob_times, [expected_times]);
 
-        assert_eq!(execute("title Alice clear"), (true, 1));
+        assert_eq!(execute("title Alice clear", None), (true, 1));
         assert_eq!(packet_payloads(&alice_packets, C_CLEAR_TITLES), [vec![0]]);
-        assert_eq!(execute("title Bob reset"), (true, 1));
+        assert_eq!(execute("title Bob reset", None), (true, 1));
         assert_eq!(packet_payloads(&bob_packets, C_CLEAR_TITLES), [vec![1]]);
 
         drop((alice, bob, server));
