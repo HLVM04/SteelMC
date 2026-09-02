@@ -16,10 +16,7 @@ use super::super::{
     },
     registration::CommandRegistration,
 };
-use crate::{
-    entity::{Entity as _, SharedEntity},
-    player::Player,
-};
+use crate::{entity::Entity as _, player::Player};
 
 pub(super) fn registration() -> CommandRegistration<CommandSource> {
     CommandRegistration::new(Identifier::vanilla_static("title"), |_| command())
@@ -89,11 +86,8 @@ fn show_title(
     let title = context.text_component("title")?;
 
     for target in &targets {
-        let target_source = context
-            .source()
-            .with_entity(Arc::clone(target) as SharedEntity);
         let title = title.try_resolve(&CommandTextResolver::with_entity_override(
-            &target_source,
+            context.source(),
             target.as_ref(),
         ))?;
         match kind {
@@ -236,10 +230,6 @@ mod tests {
         child
     }
 
-    #[expect(
-        clippy::too_many_lines,
-        reason = "one cohesive test keeps the vanilla title command graph auditable"
-    )]
     #[test]
     fn title_graph_matches_vanilla_shape() {
         init_vanilla_registry();
@@ -290,11 +280,7 @@ mod tests {
                 panic!("title branch should exist");
             };
             assert!(branch_node.is_executable());
-            assert!(
-                dispatcher
-                    .children(branch)
-                    .is_some_and(|children| children.is_empty())
-            );
+            assert!(dispatcher.children(branch).is_some_and(<[_]>::is_empty));
         }
 
         for branch in ["title", "subtitle", "actionbar"] {

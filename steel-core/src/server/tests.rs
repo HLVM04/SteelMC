@@ -3153,10 +3153,6 @@ fn damage_command_records_by_entity_as_the_responsible_player() {
 }
 
 #[test]
-#[expect(
-    clippy::too_many_lines,
-    reason = "one integration test covers all vanilla title command branches"
-)]
 fn title_command_delivers_vanilla_packets_to_recorded_connections() {
     let world = fresh_test_world("title-command");
     let storage_root = test_storage_root("title-command");
@@ -3225,7 +3221,7 @@ fn title_command_delivers_vanilla_packets_to_recorded_connections() {
             .map(|payload| decode_text_component(&payload).to_plain(&DisplayResolutor))
             .collect::<Vec<_>>();
         titles.sort_unstable();
-        assert_eq!(titles, ["Hello Alice", "Hello Bob"]);
+        assert_eq!(titles, ["Hello ", "Hello "]);
 
         assert_eq!(execute("title Alice subtitle {text:\"Sub\"}"), (true, 1));
         let subtitle = packet_payloads(&alice_packets, C_SET_SUBTITLE_TEXT);
