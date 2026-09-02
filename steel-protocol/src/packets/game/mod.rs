@@ -240,41 +240,31 @@ mod tests {
 
     #[test]
     fn title_packets_use_vanilla_ids_and_wire_formats() {
-        assert_eq!(encode(CClearTitles { reset_times: false }), [2, 14, 0]);
-        assert_eq!(encode(CClearTitles { reset_times: true }), [2, 14, 1]);
+        assert_eq!(encode(CClearTitles::new(false)), [2, 14, 0]);
+        assert_eq!(encode(CClearTitles::new(true)), [2, 14, 1]);
 
         let text = [8, 0, 5, b'h', b'e', b'l', b'l', b'o'];
         assert_eq!(
-            encode(CSetTitleText {
-                text: TextComponent::plain("hello"),
-            }),
+            encode(CSetTitleText::new(TextComponent::plain("hello"))),
             [
                 9, 114, text[0], text[1], text[2], text[3], text[4], text[5], text[6], text[7]
             ]
         );
         assert_eq!(
-            encode(CSetSubtitleText {
-                text: TextComponent::plain("hello"),
-            }),
+            encode(CSetSubtitleText::new(TextComponent::plain("hello"))),
             [
                 9, 112, text[0], text[1], text[2], text[3], text[4], text[5], text[6], text[7]
             ]
         );
         assert_eq!(
-            encode(CSetActionBarText {
-                text: TextComponent::plain("hello"),
-            }),
+            encode(CSetActionBarText::new(TextComponent::plain("hello"))),
             [
                 9, 87, text[0], text[1], text[2], text[3], text[4], text[5], text[6], text[7]
             ]
         );
 
         assert_eq!(
-            encode(CSetTitlesAnimation {
-                fade_in: 0x0102_0304,
-                stay: -2,
-                fade_out: i32::MAX,
-            }),
+            encode(CSetTitlesAnimation::new(0x0102_0304, -2, i32::MAX)),
             [13, 115, 1, 2, 3, 4, 255, 255, 255, 254, 127, 255, 255, 255]
         );
     }

@@ -2,9 +2,6 @@
 
 use std::sync::Arc;
 
-use steel_protocol::packets::game::{
-    CClearTitles, CSetActionBarText, CSetSubtitleText, CSetTitleText, CSetTitlesAnimation,
-};
 use steel_utils::{Identifier, translations};
 use text_components::TextComponent;
 
@@ -61,7 +58,7 @@ fn clear_titles(context: &SteelCommandContext<CommandSource>) -> Result<i32, Com
     let targets = context.players("targets")?;
     let result = target_count(&targets)?;
     for target in &targets {
-        target.send_packet(CClearTitles { reset_times: false });
+        target.clear_titles();
     }
     send_success(context, &targets, TitleOperation::Clear);
     Ok(result)
@@ -71,7 +68,7 @@ fn reset_titles(context: &SteelCommandContext<CommandSource>) -> Result<i32, Com
     let targets = context.players("targets")?;
     let result = target_count(&targets)?;
     for target in &targets {
-        target.send_packet(CClearTitles { reset_times: true });
+        target.reset_titles();
     }
     send_success(context, &targets, TitleOperation::Reset);
     Ok(result)
@@ -91,9 +88,9 @@ fn show_title(
             target.as_ref(),
         ))?;
         match kind {
-            TitleKind::Title => target.send_packet(CSetTitleText { text: title }),
-            TitleKind::Subtitle => target.send_packet(CSetSubtitleText { text: title }),
-            TitleKind::Actionbar => target.send_packet(CSetActionBarText { text: title }),
+            TitleKind::Title => target.send_title(title),
+            TitleKind::Subtitle => target.send_subtitle(title),
+            TitleKind::Actionbar => target.send_action_bar(title),
         }
     }
 
@@ -109,11 +106,7 @@ fn set_times(context: &SteelCommandContext<CommandSource>) -> Result<i32, Comman
     let fade_out = context.time("fadeOut")?;
 
     for target in &targets {
-        target.send_packet(CSetTitlesAnimation {
-            fade_in,
-            stay,
-            fade_out,
-        });
+        target.send_title_times(fade_in, stay, fade_out);
     }
     send_success(context, &targets, TitleOperation::Times);
     Ok(result)
