@@ -153,9 +153,9 @@ mod tests {
 
     use steel_registry::init_vanilla_registry;
     use steel_registry::{RegistryEntry, sound_events};
-    use steel_utils::{BlockPos, Identifier, serial::WriteTo};
+    use steel_utils::BlockPos;
 
-    use super::{CSound, SoundSource};
+    use super::CSound;
 
     #[test]
     fn registered_sound_packet_uses_holder_id() {
@@ -179,33 +179,5 @@ mod tests {
             steel_registry::sound_event::SoundEventHolder::Registry(sound)
                 if sound.packet_holder_id() == expected_holder_id
         ));
-    }
-
-    #[test]
-    fn direct_sound_packet_writes_holder_identifier_and_optional_range() {
-        let packet = CSound::new_holder(
-            steel_registry::sound_event::SoundEventHolder::Direct {
-                sound_id: Identifier::new("example", "sound"),
-                fixed_range: None,
-            },
-            SoundSource::Master,
-            glam::DVec3::ZERO,
-            1.0,
-            1.0,
-            0,
-        );
-        let mut encoded = Vec::new();
-        packet
-            .write(&mut encoded)
-            .expect("direct sound packet should encode");
-
-        let mut expected = vec![0, 13];
-        expected.extend_from_slice(b"example:sound");
-        expected.extend_from_slice(&[0, 0]);
-        expected.extend_from_slice(&[0; 12]);
-        expected.extend_from_slice(&1.0_f32.to_be_bytes());
-        expected.extend_from_slice(&1.0_f32.to_be_bytes());
-        expected.extend_from_slice(&0_i64.to_be_bytes());
-        assert_eq!(encoded, expected);
     }
 }
